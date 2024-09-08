@@ -20,7 +20,7 @@ from moviepy.editor import AudioClip, VideoFileClip, concatenate_videoclips
 #  ease_in: (in seconds) add this much silence around speaking intervals
 def find_speaking(audio_clip, window_size=0.1, volume_threshold=0.01, ease_in=0.25):
     # First, iterate over audio to find all silent windows.
-    num_windows = math.floor(audio_clip.end/window_size)
+    num_windows = math.floor(audio_clip.end / window_size)
     window_is_silent = []
     for i in range(num_windows):
         s = audio_clip.subclip(i * window_size, (i + 1) * window_size)
@@ -42,7 +42,10 @@ def find_speaking(audio_clip, window_size=0.1, volume_threshold=0.01, ease_in=0.
             speaking_end = i * window_size
             new_speaking_interval = [speaking_start - ease_in, speaking_end + ease_in]
             # With tiny windows, this can sometimes overlap the previous window, so merge.
-            need_to_merge = len(speaking_intervals) > 0 and speaking_intervals[-1][1] > new_speaking_interval[0]
+            need_to_merge = (
+                len(speaking_intervals) > 0
+                and speaking_intervals[-1][1] > new_speaking_interval[0]
+            )
             if need_to_merge:
                 merged_interval = [speaking_intervals[-1][0], new_speaking_interval[1]]
                 speaking_intervals[-1] = merged_interval
@@ -50,6 +53,34 @@ def find_speaking(audio_clip, window_size=0.1, volume_threshold=0.01, ease_in=0.
                 speaking_intervals.append(new_speaking_interval)
 
     return speaking_intervals
+
+
+def get_keep_clips(vid, intervals_to_keep):
+    return [vid.subclip(max(start, 0), end) for [start, end] in intervals_to_keep]
+
+
+def remove_silence(
+    keep_clips,
+    file_out,
+    fps=60,
+    preset="ultrafast",
+    codec="libx264",
+    temp_audiofile="temp-audio.m4a",
+    remove_temp=True,
+    audio_codec="aac",
+    threads=6,
+):
+    edited_video = concatenate_videoclips(keep_clips)
+    edited_video.write_videofile(
+        file_out,
+        fps=fps,
+        preset=preset,
+        codec=codec,
+        temp_audiofile=temp_audiofile,
+        remove_temp=remove_temp,
+        audio_codec=audio_codec,
+        threads=threads,
+    )
 
 
 def main():
@@ -63,21 +94,15 @@ def main():
     intervals_to_keep = find_speaking(vid.audio)
 
     print("Keeping intervals: " + str(intervals_to_keep))
-    
-    keep_clips = [vid.subclip(max(start, 0), end) for [start, end] in intervals_to_keep]
 
-    edited_video = concatenate_videoclips(keep_clips)
-    edited_video.write_videofile(file_out,
-        fps=60,
-        preset='ultrafast',
-        codec='libx264',
-        temp_audiofile='temp-audio.m4a',
-        remove_temp=True,
-        audio_codec="aac",
-        threads=6
-    )
+    # Get the clips to keep
+    keep_clips = get_keep_clips(vid, intervals_to_keep)
+
+    # TODO: Refactor this to a function
+    remove_silence(keep_clips, file_out)
 
     vid.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
