@@ -32,6 +32,12 @@ def browse_input():
     file_path = filedialog.askopenfilename(initialdir=cwd)
     entry_input.delete(0, tk.END)
     entry_input.insert(0, file_path)
+    # Update the output file entry with the same path and a "_no_silence" suffix
+    input_path = Path(file_path)
+    output_path = input_path.parent / (input_path.stem + "_no_silence" + input_path.suffix)
+    entry_output.delete(0, tk.END)
+    entry_output.insert(0, str(output_path))
+
 
 browse_button_input = tk.Button(input_frame, text="Browse", command=browse_input)
 browse_button_input.pack(side=tk.LEFT)
