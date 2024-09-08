@@ -5,49 +5,54 @@ This module creates a GUI using tkinter to:
 """
 
 import tkinter as tk
-
+from pathlib import Path
+from tkinter import filedialog
 from moviepy.editor import VideoFileClip
-
 from silence import find_speaking, get_keep_clips, remove_silence
 
 
-# Create the main window
+# Initialize the Tkinter GUI
 root = tk.Tk()
 root.title("Remove Silence from Video")
 
-# Create a label for the input file path
-label_input = tk.Label(root, text="Input file path:")
-label_input.pack()
+# Get the current working directory
+cwd = Path.cwd()
 
-# Create a text entry for the input file path
-entry_input = tk.Entry(root)
-entry_input.pack()
+# Create a frame for the input file selection
+input_frame = tk.Frame(root)
+input_frame.pack(pady=5)
 
-# Create a label for the output file path
-label_output = tk.Label(root, text="Output file path:")
-label_output.pack()
+input_label = tk.Label(input_frame, text="Input Video File:")
+input_label.pack(side=tk.LEFT)
 
-# Create a text entry for the output file path
-entry_output = tk.Entry(root)
-entry_output.pack()
+entry_input = tk.Entry(input_frame, width=50)
+entry_input.pack(side=tk.LEFT)
 
-# Create a button to browse for the input file
 def browse_input():
-    file_path = tk.filedialog.askopenfilename()
+    file_path = filedialog.askopenfilename(initialdir=cwd)
     entry_input.delete(0, tk.END)
     entry_input.insert(0, file_path)
 
-browse_button_input = tk.Button(root, text="Browse", command=browse_input)
-browse_button_input.pack()
+browse_button_input = tk.Button(input_frame, text="Browse", command=browse_input)
+browse_button_input.pack(side=tk.LEFT)
 
-# Create a button to browse for the output file
+# Create a frame for the output file selection
+output_frame = tk.Frame(root)
+output_frame.pack(pady=5)
+
+output_label = tk.Label(output_frame, text="Output Video File:")
+output_label.pack(side=tk.LEFT)
+
+entry_output = tk.Entry(output_frame, width=50)
+entry_output.pack(side=tk.LEFT)
+
 def browse_output():
-    file_path = tk.filedialog.asksaveasfilename()
+    file_path = filedialog.asksaveasfilename(initialdir=cwd)
     entry_output.delete(0, tk.END)
     entry_output.insert(0, file_path)
 
-browse_button_output = tk.Button(root, text="Browse", command=browse_output)
-browse_button_output.pack()
+browse_button_output = tk.Button(output_frame, text="Browse", command=browse_output)
+browse_button_output.pack(side=tk.LEFT)
 
 # Create a button to remove silence from the video
 def remove_silence_from_video():
@@ -61,7 +66,7 @@ def remove_silence_from_video():
     vid.close()
 
 remove_button = tk.Button(root, text="Remove Silence", command=remove_silence_from_video)
-remove_button.pack()
+remove_button.pack(pady=10)
 
 # Run the main loop
 root.mainloop()
