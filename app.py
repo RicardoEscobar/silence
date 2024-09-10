@@ -11,6 +11,36 @@ from moviepy.editor import VideoFileClip
 from silence import find_speaking, get_keep_clips, remove_silence
 
 
+def browse_input():
+    file_path = filedialog.askopenfilename(initialdir=cwd)
+    entry_input.delete(0, tk.END)
+    entry_input.insert(0, file_path)
+    # Update the output file entry with the same path and a "_no_silence" suffix
+    input_path = Path(file_path)
+    output_path = input_path.parent / (
+        input_path.stem + "_no_silence" + input_path.suffix
+    )
+    entry_output.delete(0, tk.END)
+    entry_output.insert(0, str(output_path))
+
+
+def browse_output():
+    file_path = filedialog.asksaveasfilename(initialdir=cwd)
+    entry_output.delete(0, tk.END)
+    entry_output.insert(0, file_path)
+
+
+def remove_silence_from_video():
+    file_in = entry_input.get()
+    file_out = entry_output.get()
+
+    vid = VideoFileClip(file_in)
+    intervals_to_keep = find_speaking(vid.audio)
+    keep_clips = get_keep_clips(vid, intervals_to_keep)
+    remove_silence(keep_clips, file_out)
+    vid.close()
+
+
 # Initialize the Tkinter GUI
 root = tk.Tk()
 root.title("Remove Silence from Video")
@@ -28,17 +58,6 @@ input_label.pack(side=tk.LEFT)
 entry_input = tk.Entry(input_frame, width=50)
 entry_input.pack(side=tk.LEFT)
 
-def browse_input():
-    file_path = filedialog.askopenfilename(initialdir=cwd)
-    entry_input.delete(0, tk.END)
-    entry_input.insert(0, file_path)
-    # Update the output file entry with the same path and a "_no_silence" suffix
-    input_path = Path(file_path)
-    output_path = input_path.parent / (input_path.stem + "_no_silence" + input_path.suffix)
-    entry_output.delete(0, tk.END)
-    entry_output.insert(0, str(output_path))
-
-
 browse_button_input = tk.Button(input_frame, text="Browse", command=browse_input)
 browse_button_input.pack(side=tk.LEFT)
 
@@ -52,26 +71,13 @@ output_label.pack(side=tk.LEFT)
 entry_output = tk.Entry(output_frame, width=50)
 entry_output.pack(side=tk.LEFT)
 
-def browse_output():
-    file_path = filedialog.asksaveasfilename(initialdir=cwd)
-    entry_output.delete(0, tk.END)
-    entry_output.insert(0, file_path)
-
 browse_button_output = tk.Button(output_frame, text="Browse", command=browse_output)
 browse_button_output.pack(side=tk.LEFT)
 
 # Create a button to remove silence from the video
-def remove_silence_from_video():
-    file_in = entry_input.get()
-    file_out = entry_output.get()
-
-    vid = VideoFileClip(file_in)
-    intervals_to_keep = find_speaking(vid.audio)
-    keep_clips = get_keep_clips(vid, intervals_to_keep)
-    remove_silence(keep_clips, file_out)
-    vid.close()
-
-remove_button = tk.Button(root, text="Remove Silence", command=remove_silence_from_video)
+remove_button = tk.Button(
+    root, text="Remove Silence", command=remove_silence_from_video
+)
 remove_button.pack(pady=10)
 
 # Run the main loop
