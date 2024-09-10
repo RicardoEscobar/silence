@@ -9,6 +9,7 @@ import sys
 import subprocess
 import os
 import shutil
+from pathlib import Path
 from moviepy.editor import AudioClip, VideoFileClip, concatenate_videoclips
 
 
@@ -59,6 +60,28 @@ def get_keep_clips(vid, intervals_to_keep):
     return [vid.subclip(max(start, 0), end) for [start, end] in intervals_to_keep]
 
 
+def get_fps(file_path: Path) -> int:
+    """Get the frames per second of a video file."""
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=r_frame_rate",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            str(file_path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    fps = result.stdout.decode("utf-8").split("/")
+    return int(fps[0]) / int(fps[1])
+
+
 def remove_silence(
     keep_clips,
     file_out,
@@ -72,7 +95,7 @@ def remove_silence(
 ):
     edited_video = concatenate_videoclips(keep_clips)
     edited_video.write_videofile(
-        file_out,
+        str(file_out),
         fps=fps,
         preset=preset,
         codec=codec,
@@ -83,7 +106,30 @@ def remove_silence(
     )
 
 
-def main():
+def remove_silence_from_video(file_in: Path, file_out: Path):
+    """Given an input video file and an output file, remove silence from the video."""
+    vid = VideoFileClip(str(file_in))
+    intervals_to_keep = find_speaking(vid.audio)
+    keep_clips = get_keep_clips(vid, intervals_to_keep)
+    fps = get_fps(file_in)
+    remove_silence(keep_clips, file_out, fps)
+    vid.close()
+
+
+def remove_silence_dir(dir: Path):
+    """Given a given directory, remove silence from all the videos in it."""
+    for file in dir.iterdir():
+        if file.suffix in [".mp4", ".avi", ".mov", ".mkv"]:
+            # Create a new directory to store the processed video
+            output_dir = dir / "no_silence"
+            output_dir.mkdir(exist_ok=True)
+
+            # Process the video
+            output_path = output_dir / file.name
+            remove_silence_from_video(file, output_path)
+
+
+def main_single_file():
     # Parse args
     # Input file path
     file_in = sys.argv[1]
@@ -102,6 +148,24 @@ def main():
     remove_silence(keep_clips, file_out)
 
     vid.close()
+
+
+def main_dir():
+    # Parse args
+    # Input directory path
+    dir_in = Path(sys.argv[1])
+
+    remove_silence_dir(dir_in)
+
+
+def main():
+    if len(sys.argv) == 3:
+        main_single_file()
+    elif len(sys.argv) == 2:
+        main_dir()
+    else:
+        print("Usage: python silence.py <input_file> <output_file>")
+        print("Usage: python silence.py <input_dir>")
 
 
 if __name__ == "__main__":
