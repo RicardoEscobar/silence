@@ -118,9 +118,6 @@ def remove_silence_from_video(file_in: Path, file_out: Path):
 
 def remove_silence_dir(dir: Path):
     """Given a given directory, remove silence from all the videos in it."""
-    # if the directory is empty, raise an error
-    if not any(dir.iterdir()):
-        raise ValueError("The directory is empty.")
 
     for file in dir.iterdir():
         if file.suffix in [".mp4", ".avi", ".mov", ".mkv"]:
