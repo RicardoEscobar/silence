@@ -10,14 +10,21 @@ from silence import remove_silence_dir
 
 
 def browse_dir():
-    dir_path = filedialog.askdirectory(initialdir=cwd)
+    dir = filedialog.askdirectory(initialdir=cwd)
+    dir_path = Path(dir)
+    print(f"Selected directory: {dir_path} as string: {str(dir_path)}")
     entry_dir.delete(0, tk.END)
-    entry_dir.insert(0, dir_path)
+    entry_dir.insert(0, str(dir_path))
 
 
 def remove_silence_from_dir():
-    dir_path = entry_dir.get()
-    remove_silence_dir(Path(dir_path))
+    dir = entry_dir.get()
+    dir_path = Path(dir)
+    try:
+        remove_silence_dir(dir_path)
+    except ValueError as e:
+        print(e)
+        return
 
 # Initialize the Tkinter GUI
 root = tk.Tk()
