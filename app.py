@@ -8,7 +8,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 from moviepy.editor import VideoFileClip
-from silence import find_speaking, get_keep_clips, remove_silence
+from silence import find_speaking, get_keep_clips, remove_silence, get_fps
 
 
 def browse_input():
@@ -21,7 +21,7 @@ def browse_input():
         input_path.stem + "_no_silence" + input_path.suffix
     )
     entry_output.delete(0, tk.END)
-    entry_output.insert(0, str(output_path))
+    entry_output.insert(0, output_path.as_posix())
 
 
 def browse_output():
@@ -37,7 +37,8 @@ def remove_silence_from_video():
     vid = VideoFileClip(file_in)
     intervals_to_keep = find_speaking(vid.audio)
     keep_clips = get_keep_clips(vid, intervals_to_keep)
-    remove_silence(keep_clips, file_out)
+    fps = get_fps(file_in)
+    remove_silence(keep_clips, file_out, fps)
     vid.close()
 
 
