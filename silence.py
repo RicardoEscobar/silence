@@ -103,6 +103,7 @@ def remove_silence(
         remove_temp=remove_temp,
         audio_codec=audio_codec,
         threads=threads,
+        bitrate="60000k",
     )
 
 
@@ -145,8 +146,11 @@ def main_single_file():
     # Get the clips to keep
     keep_clips = get_keep_clips(vid, intervals_to_keep)
 
+    # Get the frames per second of the video
+    fps = get_fps(file_in)
+
     # TODO: Refactor this to a function
-    remove_silence(keep_clips, file_out)
+    remove_silence(keep_clips, file_out, fps)
 
     vid.close()
 
