@@ -26,7 +26,7 @@ def remove_silence_from_dir():
         print(e)
         return
 
-# Initialize the Tkinter GUI
+# Initialize the Tkinter GUI.
 root = tk.Tk()
 
 # Set the title of the GUI
